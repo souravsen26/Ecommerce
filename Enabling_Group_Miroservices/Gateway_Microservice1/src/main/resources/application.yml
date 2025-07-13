@@ -1,0 +1,76 @@
+spring:
+ application:
+  name: GATEWAYSERVICE
+ cloud:
+  gateway:
+   routes:
+    -   id: ProductService
+        uri: lb://ProductService
+        predicates:
+          - Path=/products/**
+        filters:
+          - AuthenticationFilter
+          - name: CircuitBreaker
+            args:
+             name: ProductService
+             fallbackuri: forward:/productsFailed
+    -   id: UserAndCartService
+        uri: lb://UserAndCartService
+#        uri: http://localhost:8353
+        predicates:
+          - Path=/user/**
+        filters:
+          - AuthenticationFilter
+          - name: CircuitBreaker
+            args:
+              name: UserAndCartService
+              fallbackUri: forward:/cartandUserService
+    -   id: RATINGANDREVIEWSERVICE
+        uri: lb://RATINGANDREVIEWSERVICE
+        predicates:
+         - Path= /reviewandrating/**
+        filters:
+          - AuthenticationFilter
+          - name: CircuitBreaker
+            args:
+             name: ReviewAndRatingService
+             fallbackUri: forward:/reviewandratingService
+    -   id: RATINGANDREVIEWAUTHENTICATIONSERVICE
+        uri: lb://RATINGANDREVIEWAUTHENTICATIONSERVICE
+        predicates:
+         - Path= /ratingandreviewauthenticationservice/**
+        filters:
+         - name: CircuitBreaker
+           args:
+             name: RatingAndReviewAuthenticationService
+             fallbackUri: forward:/ratingandreviewauthenticationService 
+        
+management:
+  endpoints:
+   web:
+     exposure:
+       include: hystrix.stream
+          
+          
+eureka:
+ client:
+  register-with-eureka: true
+  fetch-registry: true
+  service-url:
+    defaultZone: http://localhost:8761/eureka/
+instance:
+ hostname: localhost
+  
+Server:
+  port: 8355
+  
+hystrix:
+ command:
+  fallback:
+   execution:
+    isolation:
+     thread: 
+      timeoutInMilliseconds: 5000
+      
+
+          
